@@ -416,7 +416,7 @@
         background-color: #e4e4e4;
         border: 1px solid #aaa;
         border-radius: 4px;
-        padding: 5px 4px;
+        padding: 5px;
     }
 
     li.multi-select__selected-option > i {

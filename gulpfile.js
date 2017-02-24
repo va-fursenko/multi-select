@@ -54,3 +54,4 @@ elixir(function(mix) {
         ],
         examplePath + '/assets/fonts'
     );
+});
