@@ -4,8 +4,8 @@
         <div class="multi-select__selected-input" ref="inputContainer">
             <div class="multi-select__selected" @click="setInputFocus()">
                 <ul class="multi-select__selected" ref="list" @click="toggleDropDown(true, true)">
-                    <li v-for="(option, index) in selectedOptions" class="multi-select__selected-option" ref="selectedOptions">
-                        <i title="Unselect option" @click="unselectOption(option)">×</i>
+                    <li v-for="option in selectedOptions" class="multi-select__selected-option" ref="selectedOptions">
+                        <i title="Unselect option" @click.stop="unselectOption(option)">×</i>
                         <span>{{ option.name }}</span>
                     </li>
                     <li class="multi-select__input" ref="textInputContainer">
@@ -14,7 +14,7 @@
                             class="multi-select__input"
                             maxlength="64"
                             ref="textInput"
-                            :placeholder="placeholder"
+                            :placeholder="hasSelected ? '' : placeholder"
                             :title="title"
                             v-model="caption"
                             @keypress="updateTextInputWidth()"
@@ -43,9 +43,9 @@
             @keyup.esc="toggleDropDown(false)"
         >
             <div
-                v-for="(option, index) in droppedDownOptions"
-                :class="{'multi-select__selected': isSelected(index)}"
-                @click="selectOption(index)"
+                v-for="option in droppedDownOptions"
+                :class="{'multi-select__selected': isSelected(option)}"
+                @click="selectOption(option)"
             >{{ option.name }}</div>
         </div>
 
@@ -53,7 +53,7 @@
 </template>
 
 <script lang="babel">
-    import { App } from '../common/app';
+    import { App } from './common/app';
 
     /* Custom component event */
     const EVENT_DROP_DOWN_SHOW = 'drop-down-show';
@@ -112,7 +112,7 @@
                 dropDownHoveredIndex: null,
                 dropDownByCaption: true,
                 // Selected options indexes in this.options array
-                selectedIndexes: []
+                selectedOptions: []
             };
         },
 
@@ -143,7 +143,7 @@
              * @return {Boolean}
              */
             hasSelected () {
-                return Array.isArray(this.selectedIndexes) && this.selectedIndexes.length > 0;
+                return Array.isArray(this.selectedOptions) && this.selectedOptions.length > 0;
             },
 
             /**
@@ -160,10 +160,10 @@
              *
              * @return {Array}
              */
-            selectedOptions () {
+            selectedIds () {
                 let result = [];
-                for (let index of this.selectedIndexes) {
-                    result.push(this.options[index]);
+                for (let option of this.selectedOptions) {
+                    result.push(option.id);
                 }
                 return result;
             }
@@ -172,19 +172,36 @@
         // Component's methods
         methods: {
             /**
+             * Try to find option in selected options list
+             *
+             * @param {Object} option
+             * @return {Number}
+             */
+            findSelected (option) {
+                for (let pos in this.selectedOptions) {
+                    if (this.selectedOptions.hasOwnProperty(pos) && this.selectedOptions[pos].id === option.id) {
+                        return Number.parseInt(pos);
+                    }
+                }
+                return -1;
+            },
+
+            /**
              * Select one dropped down option, or unselect it, if it's already selected
              *
-             * @param {Number} index
+             * @param {Object} option
              */
-            selectOption (index) {
-                let position = this.selectedIndexes.indexOf(index);
+            selectOption (option) {
+                let position = this.findSelected(option);
                 if (position == -1) {
-                    this.selectedIndexes.push(index);
-                    this.selectedIndexes = this.selectedIndexes.sort((a, b) => a - b);
+                    this.selectedOptions.push(option);
+                    this.selectedOptions = this.selectedOptions.sort((a, b) => a.name.localeCompare(b.name));
                 } else {
-                    this.selectedIndexes.splice(position, 1);
+                    this.selectedOptions.splice(position, 1);
                 }
                 Vue.nextTick(this.updateTextInputWidth);
+                // Dispatch new input event with new value
+                this.$emit('input', this.selectedIds);
             },
 
             /**
@@ -193,22 +210,27 @@
              * @param {Object} option
              */
             unselectOption (option) {
-                for (let pos in this.selectedIndexes) {
-                    if (this.options[this.selectedIndexes[pos]] && this.options[this.selectedIndexes[pos]].id == option.id) {
-                        this.selectedIndexes.splice(pos, 1);
-                        Vue.nextTick(this.updateTextInputWidth);
-                        return;
-                    }
+                let position = this.findSelected(option);
+                if (position != -1) {
+                    this.selectedOptions.splice(position, 1);
+                    Vue.nextTick(this.updateTextInputWidth);
+                    // Dispatch new input event with new value
+                    this.$emit('input', this.selectedIds);
                 }
             },
 
             /**
-             * Check, whether option with {index} is selected
+             * Check, whether option is selected
              *
-             * @param {Number} index
+             * @param {Object} option
              */
-            isSelected (index) {
-                return this.selectedIndexes.indexOf(index) != -1;
+            isSelected (option) {
+                for (let opt of this.selectedOptions) {
+                    if (opt.id === option.id) {
+                        return true;
+                    }
+                }
+                return false;
             },
 
             /**
@@ -315,6 +337,9 @@
         // Component create handler
         created () {
             Vue.nextTick(this.updateTextInputWidth);
+            Vue.nextTick(() => {
+                this.$refs.dropDown.style.width = this.$refs.inputContainer.getBoundingClientRect().width - 4 + 'px';
+            });
         },
 
         // Component mounted handler
@@ -366,7 +391,7 @@
     ul.multi-select__selected {
         width: 100%;
         overflow: hidden;
-        padding: 0 0 4px 4px;
+        padding: 0 0 2px 4px;
         margin: 0;
         text-overflow: ellipsis;
         white-space: nowrap;
@@ -449,6 +474,8 @@
         border-radius: 1px;
         font-size: 14px;
         cursor: pointer;
+        display: flex;
+        align-items: center;
     }
 
     div.multi-select__drop-down > div.multi-select__selected {
@@ -458,6 +485,14 @@
     div.multi-select__drop-down > div:hover {
         background-color: #dddddd;
         border: 1px dashed #d1d1d1;
+    }
+
+    li.multi-select__selected-option > span,
+    li.multi-select__selected-option > input,
+    div.multi-select__drop-down > div
+    {
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        font-size: 14px;
     }
 
 </style>
