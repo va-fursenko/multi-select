@@ -8,15 +8,16 @@
 <body>
     <div id="root-container">
         Выберите одну или несколько категорий: &nbsp;
+        <p>
+            <multi-select
+                placeholder="Выберите категории"
+                :options="options"
+                v-model="selectedOptions"
+            >
+            </multi-select>
+        </p>
 
-        <multi-select
-            placeholder="Выберите категории"
-            :options="options"
-            v-model="selectedOptions"
-        >
-        </multi-select>
-
-        <p>Выбранные ID: {{ selectedOptions | json }}</p>
+        <p>Выбранные ID: {{ selectedOptions }}</p>
     </div>
 
     <!-- JS scripts -->

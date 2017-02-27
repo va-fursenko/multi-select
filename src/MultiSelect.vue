@@ -18,6 +18,7 @@
                             :title="title"
                             v-model="caption"
                             @keypress="updateTextInputWidth()"
+                            @keydown.char="toggleDropDown(true, true)"
                         >
                     </li>
                 </ul>
@@ -54,10 +55,26 @@
 
 <script lang="babel">
     import { App } from './common/app';
+    import { Http } from './common/http';
 
     /* Custom component event */
     const EVENT_DROP_DOWN_SHOW = 'drop-down-show';
     const EVENT_DROP_DOWN_HIDE = 'drop-down-hide';
+
+    Vue.config.keyCodes = {
+        char: [
+            // space
+            32,
+            // a-z
+            65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90,
+            // A-Z
+            97, 98, 99, 100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122,
+            // а-я
+            1105, 1072, 1073, 1074, 1075, 1076, 1077, 1078, 1079, 1080, 1081, 1082, 1083, 1084, 1085, 1086, 1087, 1088, 1089, 1090, 1091, 1092, 1093, 1094, 1095, 1096, 1097, 1098, 1099, 1100, 1101, 1102, 1103,
+            // А-Я
+            1025, 1040, 1041, 1042, 1043, 1044, 1045, 1046, 1047, 1048, 1049, 1050, 1051, 1052, 1053, 1054, 1055, 1056, 1057, 1058, 1059, 1060, 1061, 1062, 1063, 1064, 1065, 1066, 1067, 1068, 1069, 1070, 1071,
+        ]
+    };
 
     export default {
         name: 'MultiSelect',
@@ -104,7 +121,6 @@
                 caption: '',
 
                 // Component settings
-                allowEmpty: false,
                 dropDownLimit: 0,
 
                 // Inner properties
@@ -124,17 +140,7 @@
              * @return {Array}
              */
             droppedDownOptions () {
-                if (this.caption == '' || !this.dropDownByCaption) {
-                    return this.options;
-                }
-                let selText = this.caption.toLowerCase(),
-                    droppedDown = [];
-                for (let i = 0; i < this.options.length && (this.dropDownLimit == 0 || droppedDown.length <= this.dropDownLimit); i++) {
-                    if (this.caption == '' || this.options[i].name.substr(0, selText.length).toLowerCase() == selText) {
-                        droppedDown.push(this.options[i]);
-                    }
-                }
-                return droppedDown;
+                return this.options;
             },
 
             /**
@@ -246,6 +252,17 @@
                 // Show drop down list
                 if (dropDown) {
                     this.dropDownByCaption = byCaption;
+                    if (byCaption) {
+                        let self = this;
+                        Http.ajaxAction(
+                            'http://lara.dev/product-categories.php?search=' + this.caption,
+                            {},
+                            (response) => {
+                                console.log('>>--', response);
+                                self.options = response.data;
+                            }
+                        );
+                    }
                     this.dropDownHoveredIndex = 0;
                     // Add global document click listener to handle focus lose event
                     document.addEventListener('click', this.documentClickHandler);
