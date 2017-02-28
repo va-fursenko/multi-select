@@ -4,22 +4,25 @@ let elixir = require('laravel-elixir');
 
 require("laravel-elixir-webpack-official");
 require('laravel-elixir-vue');
+require('laravel-elixir-remove');
 
 elixir.config.sourcemaps = true;
 
 let
+    npmPath = './node_modules',
     srcPath = './src',
     examplePath = './example',
-    npmPath = './node_modules';
+    assetsPath = examplePath + '/assets';
 
 /**
  * Run elixir
  */
 elixir(function(mix) {
 
-    /*
-     * Pack component
-     */
+    // Clear assets path
+    mix.remove(assetsPath);
+
+    // Pack component
 
     // Pack component to js file
     mix.webpack(
@@ -28,7 +31,7 @@ elixir(function(mix) {
             srcPath + '/**/**/*.vue',
             examplePath + '/example.js',
         ],
-        examplePath + '/assets/js/app.js'
+        assetsPath + '/js/app.js'
     );
 
     // Pack specified libs to lib.js
@@ -36,7 +39,7 @@ elixir(function(mix) {
         [
             npmPath + '/vue/dist/vue.js'
         ],
-        examplePath + '/assets/js/lib.js'
+        assetsPath + '/js/lib.js'
     );
 
     // Pack CSS to lib.css
@@ -44,14 +47,14 @@ elixir(function(mix) {
         [
             npmPath + '/font-awesome/css/font-awesome.css',
         ],
-        examplePath + '/assets/css/lib.css'
+        assetsPath + '/css/lib.css'
     );
 
     // Copy fonts
     mix.copy(
         [
-            npmPath + '/font-awesome/fonts/**'
+            npmPath + '/font-awesome/fonts/*'
         ],
-        examplePath + '/assets/fonts'
+        assetsPath + '/fonts'
     );
 });
