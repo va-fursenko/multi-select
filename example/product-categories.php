@@ -1,28 +1,53 @@
 <?php
 
-$db = new PDO('pgsql:host=postgres port=5432 dbname=lara user=dbuser password=password');
+error_reporting(E_ALL);
 
-$search = $_GET['search'] ?? '';
+try {
+    //$db = new PDO('pgsql:host=xxx dbname=xxx', 'xxx', 'xxx');
+    $db = new mysqli('xxx', 'xxx', 'xxx', 'xxx', 3306);
+    if ($db->connect_errno) {
+        throw new Exception('Bad DB connect with error number: ' . $db->connect_errno);
+    }
+    $db->set_charset('utf8');
+
+} catch (Exception $e) {
+    die(json_encode(print_r($e, true), JSON_UNESCAPED_UNICODE));
+}
+
+$search = isset($_GET['search']) ? $_GET['search'] : '';
 $limit = 20;
 
 if (!$search) {
-    $sql = "SELECT id, name FROM product_categories WHERE deleted_at IS NULL AND ns_depth = 0 ORDER BY name LIMIT $limit";
+    $sql = "SELECT id, name, path_name AS pathName FROM product_categories WHERE deleted_at IS NULL AND ns_depth = 0 ORDER BY name LIMIT $limit";
 } else {
-    $search = $db->quote(mb_strtolower($search) . '%');
-    $sql = "SELECT id, name FROM product_categories WHERE deleted_at IS NULL AND LOWER(name) LIKE $search ORDER BY name LIMIT $limit";
+    // My shit hosting hasen't mb_strtolower() function
+    //$search = $db->real_escape_string(mb_strtolower($search)) . '%';
+    $search = $db->real_escape_string($search) . '%';
+    $sql = "SELECT id, name, path_name AS pathName FROM product_categories WHERE deleted_at IS NULL AND LOWER(name) LIKE '$search' ORDER BY name LIMIT $limit";
 }
 
-$query = $db->query($sql);
-if ($query === false) {
+function errorInfo($db) {
+    $result = '';
+    foreach ($db->error_list as $err) {
+        $result .= ($result ? '; ' : '') .
+            'errno: ' . $err['errno'] . ', ' .
+            'sqlstate: ' . $err['sqlstate'] . ', ' .
+            'error: ' . $err['error'];
+    }
+    return $result;
+}
+
+$result = $db->query($sql, MYSQLI_ASSOC);
+if ($result === false) {
     die(json_encode([
         'success' => false,
-        'error'   => 'bad_query',
-    ]));
+        'error'   => errorInfo($db),
+    ], JSON_UNESCAPED_UNICODE));
 }
 
-$items = $query->fetchAll();
+$result = $result->fetch_all(MYSQLI_ASSOC);
 
 echo json_encode([
     'success' => true,
-    'data'    => $items,
-]);
+    'data'    => $result,
+], JSON_UNESCAPED_UNICODE);

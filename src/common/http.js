@@ -53,8 +53,7 @@ export const Http = {
      * @param {Object} params
      * @param {Function} onLoad
      */
-    ajaxAction (url, params, onLoad)
-    {
+    ajaxAction (url, params, onLoad) {
         let data = {};
         Object.assign(data, params);
         data._token = App.csrf();
@@ -80,8 +79,7 @@ export const Http = {
      *
      * @param {Object} response
      */
-    parseErrorResponse (response)
-    {
+    parseErrorResponse (response) {
         alert("Error occurred: '" + (response.error ? response.error : '') + "'");
     },
 
@@ -90,8 +88,7 @@ export const Http = {
      *
      * @param {Object} responseObject
      */
-    parseError (responseObject)
-    {
+    parseError (responseObject) {
         alert("Error occurred!");
         console.log('Request failed', responseObject);
     },

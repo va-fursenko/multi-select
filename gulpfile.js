@@ -20,7 +20,7 @@ let
 elixir(function(mix) {
 
     // Clear assets path
-    mix.remove(assetsPath);
+    //mix.remove(assetsPath);
 
     // Pack component
 
@@ -53,7 +53,7 @@ elixir(function(mix) {
     // Copy fonts
     mix.copy(
         [
-            npmPath + '/font-awesome/fonts/*'
+            npmPath + '/font-awesome/fonts/**'
         ],
         assetsPath + '/fonts'
     );

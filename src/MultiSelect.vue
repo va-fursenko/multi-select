@@ -4,7 +4,7 @@
         <div class="multi-select__selected-input" ref="inputContainer">
             <div class="multi-select__selected" @click="setInputFocus()">
                 <ul class="multi-select__selected" ref="list" @click="toggleDropDown(true, true)">
-                    <li v-for="option in selectedOptions" class="multi-select__selected-option" ref="selectedOptions">
+                    <li v-for="option in selectedOptions" class="multi-select__selected-option" ref="selectedOptions" :title="option.pathName">
                         <i title="Unselect option" @click.stop="unselectOption(option)">×</i>
                         <span>{{ option.name }}</span>
                     </li>
@@ -17,8 +17,10 @@
                             :placeholder="hasSelected ? '' : placeholder"
                             :title="title"
                             v-model="caption"
-                            @keypress="updateTextInputWidth()"
-                            @keydown.char="toggleDropDown(true, true)"
+                            @keydown="toggleDropDown(true, true); updateTextInputWidth();"
+                            @keydown.enter="trySelectOption()"
+                            @keydown.up="hoverNextOption(false)"
+                            @keydown.down="hoverNextOption(true)"
                         >
                     </li>
                 </ul>
@@ -44,10 +46,18 @@
             @keyup.esc="toggleDropDown(false)"
         >
             <div
-                v-for="option in droppedDownOptions"
-                :class="{'multi-select__selected': isSelected(option)}"
+                ref="droppedDownOptions"
+                v-for="(option, index) in droppedDownOptions"
+                :class="{
+                    'multi-select__selected': isSelected(option),
+                     'multi-select__hovered': dropDownHoveredIndex === index
+                }"
                 @click="selectOption(option)"
-            >{{ option.name }}</div>
+                @mouseover="dropDownHoveredIndex = index"
+            >
+                <span>{{ option.name }}</span>
+                <span class="multi-select">{{ option.pathName }}</span>
+            </div>
         </div>
 
     </div>
@@ -60,6 +70,7 @@
     /* Custom component event */
     const EVENT_DROP_DOWN_SHOW = 'drop-down-show';
     const EVENT_DROP_DOWN_HIDE = 'drop-down-hide';
+    const EVENT_OPTIONS_LOADED = 'options-loaded';
 
     Vue.config.keyCodes = {
         char: [
@@ -111,6 +122,11 @@
             id: {
                 type: String,
                 default: ''
+            },
+            // Ajax options load url
+            optionsUrl: {
+                type: String,
+                default: ''
             }
         },
 
@@ -119,6 +135,7 @@
             return {
                 // Component HTML options
                 caption: '',
+                droppedDownOptions: [],
 
                 // Component settings
                 dropDownLimit: 0,
@@ -127,22 +144,13 @@
                 isDroppedDown: false,
                 dropDownHoveredIndex: null,
                 dropDownByCaption: true,
-                // Selected options indexes in this.options array
+                // Selected options
                 selectedOptions: []
             };
         },
 
         // Computed properties
         computed: {
-            /**
-             * Get dropped down countries list
-             *
-             * @return {Array}
-             */
-            droppedDownOptions () {
-                return this.options;
-            },
-
             /**
              * Has selected options flag
              *
@@ -211,6 +219,42 @@
             },
 
             /**
+             * Select first dropped down option
+             */
+            trySelectOption () {
+                if (!this.hasDroppedDown) {
+                    return false;
+                }
+                if (this.droppedDownOptions.length > 0) {
+                    let index = this.dropDownHoveredIndex !== null ? this.dropDownHoveredIndex : 0;
+                    this.selectOption(this.droppedDownOptions[index]);
+                }
+            },
+
+            /**
+             * Focus on next one dropped down option
+             *
+             * @param inc
+             */
+            hoverNextOption (inc) {
+                let index;
+                if (this.dropDownHoveredIndex === null) {
+                    index = inc ? 0 : this.droppedDownOptions.length - 1;
+                } else if (inc && this.dropDownHoveredIndex === this.droppedDownOptions.length - 1) {
+                    index = 0;
+                } else if (!inc && this.dropDownHoveredIndex === 0) {
+                    index = this.droppedDownOptions.length - 1;
+                } else {
+                    index = this.dropDownHoveredIndex + (inc ? 1 : -1);
+                }
+                this.dropDownHoveredIndex = index;
+                if (index >= 0 && typeof this.$refs.droppedDownOptions[index] != 'undefined') {
+                    this.$refs.droppedDownOptions[index].scrollIntoView(false);
+                    //this.showSelected(this.droppedDownOptions[index]);
+                }
+            },
+
+            /**
              * Uselect specified option
              *
              * @param {Object} option
@@ -252,31 +296,18 @@
                 // Show drop down list
                 if (dropDown) {
                     this.dropDownByCaption = byCaption;
-                    if (byCaption) {
-                        let self = this;
-                        Http.ajaxAction(
-                            'http://lara.dev/product-categories.php?search=' + this.caption,
-                            {},
-                            (response) => {
-                                console.log('>>--', response);
-                                self.options = response.data;
-                            }
-                        );
-                    }
                     this.dropDownHoveredIndex = 0;
                     // Add global document click listener to handle focus lose event
                     document.addEventListener('click', this.documentClickHandler);
                     // Dispatch custom component event
                     this.$emit(EVENT_DROP_DOWN_SHOW);
-                    //this.$refs.dropDown.dispatchEvent(new Event(EVENT_DROP_DOWN_SHOW));
-                    // Hide drop down list
+                // Hide drop down list
                 } else {
                     // Remove global document click listener
                     document.removeEventListener('click', this.documentClickHandler);
                     this.dropDownHoveredIndex = null;
                     // Dispatch custom component event
                     this.$emit(EVENT_DROP_DOWN_HIDE);
-                    //this.$refs.dropDown.dispatchEvent(new Event(EVENT_DROP_DOWN_HIDE));
                 }
                 this.isDroppedDown = dropDown;
             },
@@ -336,6 +367,8 @@
              */
             windowResizeHandler (event) {
                 this.updateTextInputWidth();
+                // I don't know, why input container is less, than drop down container
+                this.$refs.dropDown.style.width = this.$refs.inputContainer.getBoundingClientRect().width - 4 + 'px';
             }
         },
 
@@ -343,20 +376,32 @@
         watch: {
             /**
              * After caption changing droppedDown options should be alike
+             * If options ajax load url specified, make request
              *
              * @param value
              */
             caption (value) {
                 this.dropDownByCaption = true;
+                if (this.optionsUrl) {
+                    let self = this;
+                    Http.ajaxAction(
+                        this.optionsUrl + value.toLowerCase(),
+                        {},
+                        (response) => {
+                            self.droppedDownOptions = response.data;
+                            self.dropDownHoveredIndex = 0;
+                            // Dispatch options load event
+                            this.$emit(EVENT_OPTIONS_LOADED, response.data);
+                        }
+                    );
+                }
             }
         },
 
         // Component create handler
         created () {
-            Vue.nextTick(this.updateTextInputWidth);
-            Vue.nextTick(() => {
-                this.$refs.dropDown.style.width = this.$refs.inputContainer.getBoundingClientRect().width - 4 + 'px';
-            });
+            this.droppedDownOptions = this.options;
+            Vue.nextTick(this.windowResizeHandler);
         },
 
         // Component mounted handler
@@ -499,6 +544,7 @@
         background-color: #eaeaea;
     }
 
+    div.multi-select__drop-down > div.multi-select__hovered,
     div.multi-select__drop-down > div:hover {
         background-color: #dddddd;
         border: 1px dashed #d1d1d1;
@@ -510,6 +556,19 @@
     {
         font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
         font-size: 14px;
+    }
+
+    /* Dropped down option path */
+    div.multi-select__drop-down > div {
+        justify-content: space-between;
+        display: flex;
+        padding-left: 2px;
+    }
+
+    div.multi-select__drop-down > div > span:last-child {
+        font-size: 10px;
+        color: #555;
+        margin-right: 6px;
     }
 
 </style>
