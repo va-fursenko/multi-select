@@ -550,12 +550,14 @@
         border: 1px dashed #d1d1d1;
     }
 
+    /* Text style */
     li.multi-select__selected-option > span,
     li.multi-select__selected-option > input,
     div.multi-select__drop-down > div
     {
-        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
         font-size: 14px;
+        font-family: inherit;
+        text-decoration: none;
     }
 
     /* Dropped down option path */
