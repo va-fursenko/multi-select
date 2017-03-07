@@ -14,7 +14,8 @@ try {
     die(json_encode(print_r($e, true), JSON_UNESCAPED_UNICODE));
 }
 
-$search = isset($_GET['search']) ? $_GET['search'] : '';
+$data = json_decode($HTTP_RAW_POST_DATA, true);
+$search = isset($data['search']) ? $data['search'] : '';
 $limit = 20;
 
 if (!$search) {

@@ -384,16 +384,12 @@
                 this.dropDownByCaption = true;
                 if (this.optionsUrl) {
                     let self = this;
-                    Http.ajaxAction(
-                        this.optionsUrl + value.toLowerCase(),
-                        {},
-                        (response) => {
-                            self.droppedDownOptions = response.data;
-                            self.dropDownHoveredIndex = 0;
-                            // Dispatch options load event
-                            this.$emit(EVENT_OPTIONS_LOADED, response.data);
-                        }
-                    );
+                    Http.ajaxAction(self.optionsUrl, {search: value.toLowerCase()}, (response) => {
+                        self.droppedDownOptions = response.data;
+                        self.dropDownHoveredIndex = 0;
+                        // Dispatch options load event
+                        self.$emit(EVENT_OPTIONS_LOADED, response.data);
+                    });
                 }
             }
         },
@@ -512,6 +508,7 @@
     div.multi-select__drop-down {
         width: 100%;
         max-height: 300px;
+        min-height: 28px;
         display: block;
         position: absolute;
         border: 1px solid lightgray;
