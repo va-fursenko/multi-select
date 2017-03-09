@@ -382,6 +382,7 @@
              */
             caption (value) {
                 this.dropDownByCaption = true;
+                // Load options by caption
                 if (this.optionsUrl) {
                     let self = this;
                     Http.ajaxAction(self.optionsUrl, {search: value.toLowerCase()}, (response) => {
@@ -390,6 +391,21 @@
                         // Dispatch options load event
                         self.$emit(EVENT_OPTIONS_LOADED, response.data);
                     });
+
+                // Filter options by caption
+                } else if (value) {
+                    value = value.toLowerCase();
+                    let droppedDown = [];
+                    for (let option of this.options) {
+                        if (option.name.substr(0, value.length).toLowerCase() == value) {
+                            droppedDown.push(option);
+                        }
+                    }
+                    this.droppedDownOptions = droppedDown;
+
+                // Show all specified options
+                } else {
+                    this.droppedDownOptions = this.options;
                 }
             }
         },

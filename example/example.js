@@ -8,7 +8,8 @@ new Vue({
     },
 
     data: {
-        selectedOptions: null,
+        selectedOptions0: null,
+        selectedOptions1: null,
         options: [
             {id: 1, name: "Авто"},
             {id: 195, name: "Бытовая техника"},

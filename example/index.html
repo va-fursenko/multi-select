@@ -5,26 +5,55 @@
     <title>Multi select</title>
     <link rel="stylesheet" href="./assets/css/lib.css">
 </head>
-<body>
+    <body>
     <style>
         body {
             font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
         }
+
+        .row {
+            margin-bottom: 50px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        #root-container {
+            margin: 20px;
+        }
     </style>
 
     <div id="root-container">
-        Выберите одну или несколько категорий: &nbsp;
-        <p>
+
+        <div class="row">
+            <label>Выберите одну или несколько категорий из предложенных:</label>
+
             <multi-select
-                placeholder="Выберите категории"
-                :options="options"
-                v-model="selectedOptions"
-                options-url="/vue/multi-select/product-categories.php"
+                    placeholder="Выберите категории"
+                    :options="options"
+                    v-model="selectedOptions0"
             >
             </multi-select>
-        </p>
 
-        <p>Выбранные ID: {{ selectedOptions }}</p>
+            <p>Выбранные ID: {{ selectedOptions0 }}</p>
+        </div>
+
+        <div class="row">
+            <label>Начните набирать название категории для автокомплита:</label>
+
+            <multi-select
+                    placeholder="Выберите категории"
+                    :options="options"
+                    v-model="selectedOptions1"
+                    options-url="/vue/multi-select/product-categories.php"
+            >
+            </multi-select>
+
+            <p>Выбранные ID: {{ selectedOptions1 }}</p>
+        </div>
+
     </div>
 
     <!-- JS scripts -->
