@@ -21,6 +21,7 @@
                             @keydown.enter="trySelectOption()"
                             @keydown.up="hoverNextOption(false)"
                             @keydown.down="hoverNextOption(true)"
+                            @keydown.esc="toggleDropDown(false, false)"
                         >
                     </li>
                 </ul>
