@@ -26,7 +26,6 @@ new Vue({
             {id: 2327, name: "Товары для животных"},
             {id: 2359, name: "Услуги"},
             {id: 2383, name: "Электроника"}
-        ],
-        optionsUrl: "http://insbor.ru/vue/multi-select/product-categories.php"
+        ]
     }
 });

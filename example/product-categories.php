@@ -2,9 +2,11 @@
 
 error_reporting(E_ALL);
 
+require_once('./config.php');
+
 try {
-    //$db = new PDO('pgsql:host=xxx dbname=xxx', 'xxx', 'xxx');
-    $db = new mysqli('xxx', 'xxx', 'xxx', 'xxx', 3306);
+    //$db = new PDO('pgsql:host=' . DB_HOST . ' dbname=' . DB_NAME, DB_USER, DB_PASSWORD);
+    $db = new mysqli(DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, 3306);
     if ($db->connect_errno) {
         throw new Exception('Bad DB connect with error number: ' . $db->connect_errno);
     }
@@ -14,7 +16,7 @@ try {
     die(json_encode(print_r($e, true), JSON_UNESCAPED_UNICODE));
 }
 
-$data = json_decode($HTTP_RAW_POST_DATA, true);
+$data = json_decode(file_get_contents('php://input'), true);
 $search = isset($data['search']) ? $data['search'] : '';
 $limit = 20;
 
