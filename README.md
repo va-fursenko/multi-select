@@ -1,4 +1,4 @@
-# country-select
+# multi-select
 Компонент VueJS2 для множественного выбора.
  
 Multi select VueJS2 component.
