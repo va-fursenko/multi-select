@@ -113,11 +113,6 @@
                 type: String,
                 default: ''
             },
-            // Flag, allows empty country
-            allowEmpty: {
-                type: Boolean,
-                default: false
-            },
             // Component DOM id
             id: {
                 type: String,
