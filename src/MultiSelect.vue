@@ -68,11 +68,6 @@
     import { App } from './common/app';
     import { Http } from './common/http';
 
-    /* Custom component event */
-    const EVENT_DROP_DOWN_SHOW = 'drop-down-show';
-    const EVENT_DROP_DOWN_HIDE = 'drop-down-hide';
-    const EVENT_OPTIONS_LOADED = 'options-loaded';
-
     Vue.config.keyCodes = {
         char: [
             // space
@@ -147,6 +142,19 @@
 
         // Computed properties
         computed: {
+            /**
+             * Possible component's custom events
+             *
+             * @return {Object}
+             */
+            events () {
+                return {
+                    DROP_DOWN_SHOW: 'drop-down-show',
+                    DROP_DOWN_HIDE: 'drop-down-hide',
+                    OPTIONS_LOADED: 'options-loaded'
+                };
+            },
+
             /**
              * Has selected options flag
              *
@@ -296,14 +304,14 @@
                     // Add global document click listener to handle focus lose event
                     document.addEventListener('click', this.documentClickHandler);
                     // Dispatch custom component event
-                    this.$emit(EVENT_DROP_DOWN_SHOW);
+                    this.$emit(this.events.DROP_DOWN_SHOW);
                 // Hide drop down list
                 } else {
                     // Remove global document click listener
                     document.removeEventListener('click', this.documentClickHandler);
                     this.dropDownHoveredIndex = null;
                     // Dispatch custom component event
-                    this.$emit(EVENT_DROP_DOWN_HIDE);
+                    this.$emit(this.events.DROP_DOWN_HIDE);
                 }
                 this.isDroppedDown = dropDown;
             },
@@ -385,7 +393,7 @@
                         self.droppedDownOptions = response.data;
                         self.dropDownHoveredIndex = 0;
                         // Dispatch options load event
-                        self.$emit(EVENT_OPTIONS_LOADED, response.data);
+                        self.$emit(self.events.OPTIONS_LOADED, response.data);
                     });
 
                 // Filter options by caption
