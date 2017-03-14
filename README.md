@@ -56,3 +56,12 @@ Multi select VueJS2 component.
     ]
 }
 ```
+
+При открытии и закрытии выпадающего списка опций и при загрузке опций с сервера вызываются следующие события `this.events`:
+```js
+    {
+        DROP_DOWN_SHOW: 'drop-down-show',
+        DROP_DOWN_HIDE: 'drop-down-hide',
+        OPTIONS_LOADED: 'options-loaded'
+    }
+```
