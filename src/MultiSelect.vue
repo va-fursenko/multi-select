@@ -34,7 +34,7 @@
                       'fa-chevron-up': isDroppedDown
                 }"
                 :title="(isDroppedDown ? 'Hide' : 'Show') + ' options list'"
-                @click="toggleDropDown(!isDroppedDown, false); $refs.textInput.focus()"
+                @click="toggleDropDown(!isDroppedDown, false); setInputFocus()"
              >
             </div>
         </div>
